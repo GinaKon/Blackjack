@@ -1,44 +1,64 @@
-import random    #yes
+import random    
 
-card_values = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-card_deck = card_values * 4
+class Card:
+
+    def __init__(self, suit, rank):
+     self.suit = suit
+     self.rank = rank
+      
+      
+    def card_value(self):
+     if self.rank.isdigit():
+         return int(self.rank)
+     elif self.rank in ['J', 'Q', 'K']:
+         return 10
+     elif self.rank == 'A':
+         return 11
+     
+    
+    def get_value(self):
+       return (self.suit, self.card_value())
 
 
-def card_value(card):
-    if card.isdigit():
-        return int(card)
-    elif card in ['J', 'Q', 'K']:
-        return 10
-    elif card == 'A':
-        return 11
+class Deck:
+
+    suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+
+    def __init__(self):
+        self.total_cards = []
+        for i in Deck.suits:
+           for x in Deck.ranks:
+              self.total_cards.append(Card(i,x))
+
+
+    def draw_card(self):
+       card = random.choice(self.total_cards)
+       self.total_cards.remove (card)
+       return card
     
 
-def draw_card(deck):
-    card = random.choice(deck)
-    deck.remove(card)
-    return card
+def handled_ace():
+    ace = input(f"Would you want ace to be used as number '1' or as number '11'? ")
+    if ace == '1' or ace == '11':
+        return int(ace) 
+    else:
+        print("Enter only the number '1' or '11'.")
+        return handled_ace()
 
-# def blackjack(card1, card2, card3, card4):
-#     player_total = card_value(card1) + card_value(card2)
-#     dealer_total = card_value(card3) + card_value(card4)
-
-#     if player_total > 21:
-#         return "Busted!"
-#     elif player_total == 21:
-#         return "Black Jack!"
-#     elif player_total < dealer_total:
-#         return "Hit me"
-#     else:
-#         return "I'll Stay"
-
-
-def play_blackjack(playerhand, dealerhand):
+    
+def play_blackjack(playerhand, dealerhand, deck):
     print(f"Your current hand: {playerhand}")
     action = input("Do you want to 'Hit' or 'Stay'? ").strip().lower()
 
+
     if action == 'hit':
-        new_card = card_value(draw_card(card_deck))
+        new_card = deck.draw_card().card_value()
         print(f"You drew a card with value {new_card}.")
+        if new_card == 11:
+            new_card = handled_ace()
+            
         playerhand += new_card
 
         if playerhand > 21:
@@ -46,7 +66,7 @@ def play_blackjack(playerhand, dealerhand):
         elif playerhand == 21:
             return "Blackjack! You win!"
         else:
-            return play_blackjack(playerhand, dealerhand)
+            return play_blackjack(playerhand, dealerhand, deck)
 
     elif action == 'stay':
         print(f"Dealer's hand: {dealerhand}")
@@ -62,8 +82,7 @@ def play_blackjack(playerhand, dealerhand):
         return play_blackjack(playerhand, dealerhand)
 
 
-playerhand = card_value(draw_card(card_deck)) + card_value(draw_card(card_deck))
-dealerhand = card_value(draw_card(card_deck)) + card_value(draw_card(card_deck))
-print(play_blackjack(playerhand, dealerhand))
-# print(draw_card(card_deck))
-print(card_deck)
+deck = Deck()
+playerhand = deck.draw_card().card_value() + deck.draw_card().card_value()
+dealerhand = deck.draw_card().card_value() + deck.draw_card().card_value()
+print(play_blackjack(playerhand, dealerhand, deck))
