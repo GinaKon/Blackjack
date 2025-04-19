@@ -1,88 +1,117 @@
-import random    
+import random
 
+# Represents a single playing card
 class Card:
-
-    def __init__(self, suit, rank):
-     self.suit = suit
-     self.rank = rank
-      
-      
-    def card_value(self):
-     if self.rank.isdigit():
-         return int(self.rank)
-     elif self.rank in ['J', 'Q', 'K']:
-         return 10
-     elif self.rank == 'A':
-         return 11
-     
-    
-    def get_value(self):
-       return (self.suit, self.card_value())
-
-
-class Deck:
-
+    # Class attributes for suits and ranks of a standard deck
     suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
     ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
+    def __init__(self, suit, rank):
+        self.suit = suit  # Suit of the card (e.g., Hearts)
+        self.rank = rank  # Rank of the card (e.g., A, K, 10)
 
+    # Returns the Blackjack value of the card
+    def card_value(self):
+        if self.rank.isdigit():  # Number cards (2-10)
+            return int(self.rank)
+        elif self.rank in ['J', 'Q', 'K']:  # Face cards (J, Q, K) are worth 10
+            return 10
+        elif self.rank == 'A':  # Ace can be worth 11 initially
+            return 11
+
+    # Returns a tuple with card info and its value
+    def get_value(self):
+        return (self.suit, self.rank, self.card_value())
+
+
+# Represents a deck of 52 cards
+class Deck:
     def __init__(self):
-        self.total_cards = []
-        for i in Deck.suits:
-           for x in Deck.ranks:
-              self.total_cards.append(Card(i,x))
+        # Create a full deck of 52 unique cards
+        self.total_cards = [Card(suit, rank) for suit in Card.suits for rank in Card.ranks]
 
-
+    # Draw a random card from the deck and remove it
     def draw_card(self):
-       card = random.choice(self.total_cards)
-       self.total_cards.remove (card)
-       return card
-    
+        card = random.choice(self.total_cards)
+        self.total_cards.remove(card)
+        return card
 
-def handled_ace():
-    ace = input(f"Would you want ace to be used as number '1' or as number '11'? ")
-    if ace == '1' or ace == '11':
-        return int(ace) 
-    else:
-        print("Enter only the number '1' or '11'.")
-        return handled_ace()
+    # Allow len() to be used to check remaining cards in the deck
+    def __len__(self):
+        return len(self.total_cards)
 
-    
-def play_blackjack(playerhand, dealerhand, deck):
-    print(f"Your current hand: {playerhand}")
+
+# Calculate the total value of a hand (adjusting Aces if necessary)
+def hand_value(hand):
+    value = sum(card.card_value() for card in hand)
+    aces = sum(card.rank == 'A' for card in hand)  # Count number of Aces
+
+    # If hand is over 21 and has Aces, reduce their value from 11 to 1
+    while value > 21 and aces:
+        value -= 10
+        aces -= 1
+
+    return value
+
+
+# Main function to simulate a round of Blackjack
+def play_blackjack(player_hand, dealer_hand, deck):
+    # Show player's current hand and total value
+    print(f"Your current hand: {[(card.suit, card.rank) for card in player_hand]}, total value: {hand_value(player_hand)}")
     action = input("Do you want to 'Hit' or 'Stay'? ").strip().lower()
 
-
+    # If player chooses to hit (draw another card)
     if action == 'hit':
-        new_card = deck.draw_card().card_value()
-        print(f"You drew a card with value {new_card}.")
-        if new_card == 11:
-            new_card = handled_ace()
-            
-        playerhand += new_card
+        new_card = deck.draw_card()
+        player_hand.append(new_card)
+        print(f"You drew: {new_card.suit} {new_card.rank} with value {new_card.card_value()}.")
 
-        if playerhand > 21:
+        # Check if player busted or hit Blackjack
+        if hand_value(player_hand) > 21:
             return "You busted! You lose."
-        elif playerhand == 21:
+        elif hand_value(player_hand) == 21:
             return "Blackjack! You win!"
         else:
-            return play_blackjack(playerhand, dealerhand, deck)
+            # Recursively continue the game
+            return play_blackjack(player_hand, dealer_hand, deck)
 
+    # If player chooses to stay (end their turn)
     elif action == 'stay':
-        print(f"Dealer's hand: {dealerhand}")
-        print(f"Your final hand: {playerhand}")
+        print(f"Dealer's hand: {[(card.suit, card.rank) for card in dealer_hand]}, total value: {hand_value(dealer_hand)}")
+        print(f"Your final hand: {[(card.suit, card.rank) for card in player_hand]}, total value: {hand_value(player_hand)}")
 
-        if dealerhand >= playerhand:
+        # Dealer draws cards until reaching at least 17
+        while hand_value(dealer_hand) < 17:
+            new_card = deck.draw_card()
+            dealer_hand.append(new_card)
+            print(f"Dealer drew: {new_card.suit} {new_card.rank} with value {new_card.card_value()}.")
+
+        dealer_value = hand_value(dealer_hand)
+        player_value = hand_value(player_hand)
+
+        print(f"Dealer's final hand: {[(card.suit, card.rank) for card in dealer_hand]}, total value: {dealer_value}")
+
+        # Determine the winner based on final hand values
+        if dealer_value > 21 or player_value > dealer_value:
+            return "You win!"
+        elif dealer_value > player_value:
             return "Dealer wins. You lose."
         else:
-            return "You win!"
+            return "It's a tie!"
 
+    # If input is invalid, prompt again
     else:
         print("Invalid input. Please enter 'Hit' or 'Stay'.")
-        return play_blackjack(playerhand, dealerhand)
+        return play_blackjack(player_hand, dealer_hand, deck)
 
 
+# Initialize a new deck of cards
 deck = Deck()
-playerhand = deck.draw_card().card_value() + deck.draw_card().card_value()
-dealerhand = deck.draw_card().card_value() + deck.draw_card().card_value()
-print(play_blackjack(playerhand, dealerhand, deck))
+
+# Deal initial two cards to player and dealer
+player_hand = [deck.draw_card(), deck.draw_card()]
+dealer_hand = [deck.draw_card(), deck.draw_card()]
+
+# Start the game
+result = play_blackjack(player_hand, dealer_hand, deck)
+print(result)
