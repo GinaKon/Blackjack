@@ -2,11 +2,14 @@ import random
 
 # Represents a single playing card
 class Card:
-    # Suits and ranks used in a standard 52-card deck
+
+    # Class attributes for suits and ranks of a standard deck
+
     suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
     ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
     def __init__(self, suit, rank):
+
         self.suit = suit  # e.g., "Hearts"
         self.rank = rank  # e.g., "K"
 
@@ -20,6 +23,21 @@ class Card:
             return 11
 
     # Return a tuple of suit, rank, and value
+
+        self.suit = suit  # Suit of the card (e.g., Hearts)
+        self.rank = rank  # Rank of the card (e.g., A, K, 10)
+
+    # Returns the Blackjack value of the card
+    def card_value(self):
+        if self.rank.isdigit():  # Number cards (2-10)
+            return int(self.rank)
+        elif self.rank in ['J', 'Q', 'K']:  # Face cards (J, Q, K) are worth 10
+            return 10
+        elif self.rank == 'A':  # Ace can be worth 11 initially
+            return 11
+
+    # Returns a tuple with card info and its value
+
     def get_value(self):
         return (self.suit, self.rank, self.card_value())
 
